@@ -17,7 +17,6 @@ def test_fetch_all():
         # 'timezone': 'auto',
         # 'current': ['temperature_2m','precipitation'],
         # 'current_weather': 1,
-        "format": "flatbuffers",
     }
 
     results = om.weather_api("https://archive-api.open-meteo.com/v1/archive", params=params)
