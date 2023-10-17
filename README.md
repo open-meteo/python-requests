@@ -1,14 +1,14 @@
-# Open-Meteo Python API Client
+# Open-Meteo API Python Client
 
-An API client to get weather data from the Open-Meteo Weather API based on the Python library `requests`.
+This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
 
-Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy` or `pandas` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly.
+Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy` or `pandas` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be in [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
-TODO:
-- Document data structure
-- Consider dedicated pandas library
+This library is primarily designed for data-scientists to process weather data. In combination with the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) data from 1940 onwards can be analyzed quickly.
 
 ## Basic Usage
+
+The following example gets an hourly temperature and precipitation forecast for Berlin. Additionally, the current temperature is retrieved. It is recommended to only specify the required weather variables.
 
 ```python
 # pip install openmeteo-requests
@@ -30,22 +30,47 @@ print(f"Coordinates {result.Latitude()}°E {result.Longitude()}°N {result.Eleva
 print(f"Timezone {result.Timezone()} {result.TimezoneAbbreviation()} Offset={result.UtcOffsetSeconds()}s")
 
 print(f"Current temperature is {result.Current().Temperature2m().Value() °C}")
+```
 
-# Accessing hourly forecasts as numpy arrays
+Note 1: You can also supply a list of latitude and longitude coordinates to get data for multiple locations. The API will return a array of results, hence in this example, we only consider the first location with `result = results[0]`.
+
+Note 2: Please note the function calls `()` for each attribute like `Latitude()`. Those function calls are necessary due to the FlatBuffers format to dynamically get data from an attribute without expensive parsing.
+
+### NumPy
+
+If you are using `NumPy` you can easily get hourly or daily data as `NumPy` array of type float.
+
+```python
+import numpy as np
+
 hourly = result.Hourly()
-temperature_2m = hourly.Temperature2m().ValuesAsNumpy()
-precipitation = hourly.Temperature2m().ValuesAsNumpy()
+time = hourly.Time()
 
+timestamps = np.arange(time.Start(), time.End(), time.Interval())
+temperature_2m = hourly.Temperature2m().ValuesAsNumpy()
+precipitation = hourly.Precipitation().ValuesAsNumpy()
+```
+
+### Pandas
+
+For `Pandas` you can prepare a data-frame from hourly data like follows:
+
+
+```python
 # Usage with Pandas Dataframes
 import pandas as pd
+
+hourly = result.Hourly()
+time = hourly.Time()
+
 date = pd.date_range(
-    start=pd.to_datetime(hourly.Time().Start(), unit="s"),
-    end=pd.to_datetime(hourly.Time().End(), unit="s"),
-    freq=pd.Timedelta(seconds=hourly.Time().Interval()),
+    start=pd.to_datetime(time.Start(), unit="s"),
+    end=pd.to_datetime(time.End(), unit="s"),
+    freq=pd.Timedelta(seconds=time.Interval()),
     inclusive="left"
 )
 df = pd.DataFrame(
-    data={
+    data = {
         "date": date,
         "temperature_2m": hourly.Temperature2m().ValuesAsNumpy(),
         "precipitation": hourly.Precipitation().ValuesAsNumpy()
@@ -59,7 +84,7 @@ print(df)
 #3  2023-08-01 03:00:00       16.846001            0.2
 ```
 
-## Caching Data
+### Caching Data
 
 If you are working with large amounts of data, caching data can make it easier to develop. You can pass a cached session from the library `requests-cache` to the Open-Meteo API client.
 
@@ -82,6 +107,15 @@ om = openmeteo_requests.Client(session=retry_session)
 
 # Using the client object `om` will now cache all weather data
 ```
+
+# TODO
+- Document multi location/timeinterval usage
+- Document FlatBuffers data structure
+- Document time start/end/interval
+- Document timezones behavior
+- Document pressure level and upper level
+- Document endpoints for air quality, etc
+- Consider dedicated pandas library to convert responses quickly
 
 # License
 MIT
