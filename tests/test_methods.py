@@ -31,3 +31,10 @@ def test_fetch_all():
     print("Coordinates ", res.Latitude(), res.Longitude(), res.Elevation())
     print(res.Timezone(), res.TimezoneAbbreviation())
     print("Generation time", res.GenerationtimeMs())
+
+
+def test_int_client():
+    """
+    This test is marked implicitly as an integration test because the name contains "_init_"
+    https://docs.pytest.org/en/6.2.x/example/markers.html#automatically-adding-markers-based-on-test-names
+    """
