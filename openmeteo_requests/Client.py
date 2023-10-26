@@ -5,12 +5,7 @@ from __future__ import annotations
 from typing import TypeVar
 
 import requests
-from openmeteo_sdk.AirQualityApiResponse import AirQualityApiResponse
-from openmeteo_sdk.ClimateApiResponse import ClimateApiResponse
-from openmeteo_sdk.EnsembleApiResponse import EnsembleApiResponse
-from openmeteo_sdk.FloodApiResponse import FloodApiResponse
-from openmeteo_sdk.MarineApiResponse import MarineApiResponse
-from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
+from openmeteo_sdk.ApiResponse import ApiResponse
 
 T = TypeVar("T")
 TSession = TypeVar("TSession", bound=requests.Session)
@@ -47,29 +42,9 @@ class Client:
             pos += length + 4
         return messages
 
-    def weather_api(self, url: str, params: any) -> list[WeatherApiResponse]:
+    def get(self, url: str, params: any) -> list[ApiResponse]:
         """Get and decode as weather api"""
-        return self._get(WeatherApiResponse, url, params)
-
-    def ensemble_api(self, url: str, params: any) -> list[EnsembleApiResponse]:
-        """Get and decode as ensemble api"""
-        return self._get(EnsembleApiResponse, url, params)
-
-    def flood_api(self, url: str, params: any) -> list[FloodApiResponse]:
-        """Get and decode as flood api"""
-        return self._get(FloodApiResponse, url, params)
-
-    def air_quality_api(self, url: str, params: any) -> list[AirQualityApiResponse]:
-        """Get and decode as air quality api"""
-        return self._get(AirQualityApiResponse, url, params)
-
-    def climate_api(self, url: str, params: any) -> list[ClimateApiResponse]:
-        """Get and decode as climate api"""
-        return self._get(ClimateApiResponse, url, params)
-
-    def marine_api(self, url: str, params: any) -> list[MarineApiResponse]:
-        """Get and decode as marine api"""
-        return self._get(MarineApiResponse, url, params)
+        return self._get(ApiResponse, url, params)
 
     def __del__(self):
         """cleanup"""

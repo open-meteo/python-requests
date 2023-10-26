@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from openmeteo_sdk.Variable import Variable
 
 import openmeteo_requests
 
@@ -19,19 +20,32 @@ def test_fetch_all():
         # 'current_weather': 1,
     }
 
-    results = om.weather_api("https://archive-api.open-meteo.com/v1/archive", params=params)
-    assert len(results) == 3
-    result = results[0]
-    assert result.Latitude() == pytest.approx(52.5)
-    assert result.Longitude() == pytest.approx(13.4)
-    result = results[1]
-    assert result.Latitude() == pytest.approx(48.1)
-    assert result.Longitude() == pytest.approx(9.3)
-    result = results[0]
+    responses = om.get("https://archive-api.open-meteo.com/v1/archive", params=params)
+    #responses = om.get("http://127.0.0.1:8080/v1/archive", params=params)
+    assert len(responses) == 3
+    response = responses[0]
+    assert response.Latitude() == pytest.approx(52.5)
+    assert response.Longitude() == pytest.approx(13.4)
+    response = responses[1]
+    assert response.Latitude() == pytest.approx(48.1)
+    assert response.Longitude() == pytest.approx(9.3)
+    response = responses[0]
 
-    print(f"Coordinates {result.Latitude()}°E {result.Longitude()}°N {result.Elevation()} m asl")
-    print(f"Timezone {result.Timezone()} {result.TimezoneAbbreviation()} {result.UtcOffsetSeconds()}")
-    print(f"Generation time {result.GenerationtimeMs()} ms")
+    print(f"Coordinates {response.Latitude()}°E {response.Longitude()}°N {response.Elevation()} m asl")
+    print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()} {response.UtcOffsetSeconds()}")
+    print(f"Generation time {response.GenerationTimeMilliseconds()} ms")
+
+    hourly = response.Hourly()
+    hourly_series = list(map(lambda i: hourly.Series(i), range(0, hourly.SeriesLength())))
+
+    temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_series))
+    precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_series))
+
+    assert temperature_2m.ValuesLength() == 48
+    assert precipitation.ValuesLength() == 48
+
+    #print(temperature_2m.ValuesAsNumpy())
+    #print(precipitation.ValuesAsNumpy())
 
 
 def test_int_client():
