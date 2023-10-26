@@ -21,7 +21,7 @@ def test_fetch_all():
     }
 
     responses = om.get("https://archive-api.open-meteo.com/v1/archive", params=params)
-    #responses = om.get("http://127.0.0.1:8080/v1/archive", params=params)
+    # responses = om.get("http://127.0.0.1:8080/v1/archive", params=params)
     assert len(responses) == 3
     response = responses[0]
     assert response.Latitude() == pytest.approx(52.5)
@@ -44,8 +44,8 @@ def test_fetch_all():
     assert temperature_2m.ValuesLength() == 48
     assert precipitation.ValuesLength() == 48
 
-    #print(temperature_2m.ValuesAsNumpy())
-    #print(precipitation.ValuesAsNumpy())
+    # print(temperature_2m.ValuesAsNumpy())
+    # print(precipitation.ValuesAsNumpy())
 
 
 def test_int_client():

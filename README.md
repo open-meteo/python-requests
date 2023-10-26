@@ -2,7 +2,7 @@
 
 This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
 
-Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy` or `pandas` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be in [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
+Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy` or `pandas` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be found on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
 This library is primarily designed for data-scientists to process weather data. In combination with the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) data from 1940 onwards can be analyzed quickly.
 
@@ -14,6 +14,7 @@ The following example gets an hourly temperature and precipitation forecast for 
 # pip install openmeteo-requests
 
 import openmeteo_requests
+from openmeteo_sdk.Variable import Variable
 
 om = openmeteo_requests.Client()
 params = {
@@ -23,16 +24,25 @@ params = {
     "current": ["temperature_2m"]
 }
 
-results = om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
-result = results[0]
+responses = om.get("https://api.open-meteo.com/v1/forecast", params=params)
+response = responses[0]
+print(f"Coordinates {response.Latitude()}°E {response.Longitude()}°N")
+print(f"Elevation {response.Elevation()} m asl")
+print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
+print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
 
-print(f"Coordinates {result.Latitude()}°E {result.Longitude()}°N {result.Elevation()} m asl")
-print(f"Timezone {result.Timezone()} {result.TimezoneAbbreviation()} Offset={result.UtcOffsetSeconds()}s")
+# Current values
+current = response.Current()
+current_series = list(map(lambda i: current.Series(i), range(0, current.SeriesLength())))
+current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_series))
+current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_series))
 
-print(f"Current temperature is {result.Current().Temperature2m().Value() °C}")
+print(f"Current time {current.Time()}")
+print(f"Current temperature_2m {current_temperature_2m.Value()}")
+print(f"Current relative_humidity_2m {current_relative_humidity_2m.Value()}")
 ```
 
-Note 1: You can also supply a list of latitude and longitude coordinates to get data for multiple locations. The API will return a array of results, hence in this example, we only consider the first location with `result = results[0]`.
+Note 1: You can also supply a list of latitude and longitude coordinates to get data for multiple locations. The API will return a array of results, hence in this example, we only consider the first location with `response = responses[0]`.
 
 Note 2: Please note the function calls `()` for each attribute like `Latitude()`. Those function calls are necessary due to the FlatBuffers format to dynamically get data from an attribute without expensive parsing.
 
@@ -43,12 +53,13 @@ If you are using `NumPy` you can easily get hourly or daily data as `NumPy` arra
 ```python
 import numpy as np
 
-hourly = result.Hourly()
-time = hourly.Time()
+hourly = response.Hourly()
+hourly_time = range(hourly.Time(), hourly.TimeEnd(), hourly.Interval())
+hourly_series = list(map(lambda i: hourly.Series(i), range(0, hourly.SeriesLength())))
 
-timestamps = np.arange(time.Start(), time.End(), time.Interval())
-temperature_2m = hourly.Temperature2m().ValuesAsNumpy()
-precipitation = hourly.Precipitation().ValuesAsNumpy()
+hourly_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_series)).ValuesAsNumpy()
+hourly_precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_series)).ValuesAsNumpy()
+hourly_wind_speed_10m = next(filter(lambda x: x.Variable() == Variable.wind_speed and x.Altitude() == 10, hourly_series)).ValuesAsNumpy()
 ```
 
 ### Pandas
@@ -57,26 +68,18 @@ For `Pandas` you can prepare a data-frame from hourly data like follows:
 
 
 ```python
-# Usage with Pandas Dataframes
-import pandas as pd
+hourly_data = {"date": pd.date_range(
+	start = pd.to_datetime(hourly.Time(), unit = "s"),
+	end = pd.to_datetime(hourly.TimeEnd(), unit = "s"),
+	freq = pd.Timedelta(seconds = hourly.Interval()),
+	inclusive = "left"
+)}
+hourly_data["temperature_2m"] = hourly_temperature_2m
+hourly_data["precipitation"] = hourly_precipitation
+hourly_data["wind_speed_10m"] = hourly_wind_speed_10m
 
-hourly = result.Hourly()
-time = hourly.Time()
-
-date = pd.date_range(
-    start=pd.to_datetime(time.Start(), unit="s"),
-    end=pd.to_datetime(time.End(), unit="s"),
-    freq=pd.Timedelta(seconds=time.Interval()),
-    inclusive="left"
-)
-df = pd.DataFrame(
-    data = {
-        "date": date,
-        "temperature_2m": hourly.Temperature2m().ValuesAsNumpy(),
-        "precipitation": hourly.Precipitation().ValuesAsNumpy()
-    }
-)
-print(df)
+hourly_dataframe = pd.DataFrame(data = hourly_data)
+print(hourly_dataframe)
 #date  temperature_2m  precipitation
 #0  2023-08-01 00:00:00       16.945999            1.7
 #1  2023-08-01 01:00:00       16.996000            2.1
