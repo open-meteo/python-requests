@@ -24,7 +24,7 @@ params = {
     "current": ["temperature_2m"]
 }
 
-responses = om.get("https://api.open-meteo.com/v1/forecast", params=params)
+responses = om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
 response = responses[0]
 print(f"Coordinates {response.Latitude()}°E {response.Longitude()}°N")
 print(f"Elevation {response.Elevation()} m asl")
@@ -33,9 +33,9 @@ print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
 
 # Current values
 current = response.Current()
-current_series = list(map(lambda i: current.Series(i), range(0, current.SeriesLength())))
-current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_series))
-current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_series))
+current_variables = list(map(lambda i: current.Variables(i), range(0, current.VariablesLength())))
+current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_variables))
+current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_variables))
 
 print(f"Current time {current.Time()}")
 print(f"Current temperature_2m {current_temperature_2m.Value()}")
@@ -55,11 +55,11 @@ import numpy as np
 
 hourly = response.Hourly()
 hourly_time = range(hourly.Time(), hourly.TimeEnd(), hourly.Interval())
-hourly_series = list(map(lambda i: hourly.Series(i), range(0, hourly.SeriesLength())))
+hourly_variables = list(map(lambda i: hourly.Variables(i), range(0, hourly.VariablesLength())))
 
-hourly_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_series)).ValuesAsNumpy()
-hourly_precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_series)).ValuesAsNumpy()
-hourly_wind_speed_10m = next(filter(lambda x: x.Variable() == Variable.wind_speed and x.Altitude() == 10, hourly_series)).ValuesAsNumpy()
+hourly_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_variables)).ValuesAsNumpy()
+hourly_precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_variables)).ValuesAsNumpy()
+hourly_wind_speed_10m = next(filter(lambda x: x.Variable() == Variable.wind_speed and x.Altitude() == 10, hourly_variables)).ValuesAsNumpy()
 ```
 
 ### Pandas

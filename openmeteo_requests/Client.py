@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TypeVar
 
 import requests
-from openmeteo_sdk.ApiResponse import ApiResponse
+from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 
 T = TypeVar("T")
 TSession = TypeVar("TSession", bound=requests.Session)
@@ -42,9 +42,9 @@ class Client:
             pos += length + 4
         return messages
 
-    def get(self, url: str, params: any) -> list[ApiResponse]:
+    def weather_api(self, url: str, params: any) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
-        return self._get(ApiResponse, url, params)
+        return self._get(WeatherApiResponse, url, params)
 
     def __del__(self):
         """cleanup"""

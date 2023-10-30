@@ -20,7 +20,7 @@ def test_fetch_all():
         # 'current_weather': 1,
     }
 
-    responses = om.get("https://archive-api.open-meteo.com/v1/archive", params=params)
+    responses = om.weather_api("https://archive-api.open-meteo.com/v1/archive", params=params)
     # responses = om.get("http://127.0.0.1:8080/v1/archive", params=params)
     assert len(responses) == 3
     response = responses[0]
@@ -36,10 +36,10 @@ def test_fetch_all():
     print(f"Generation time {response.GenerationTimeMilliseconds()} ms")
 
     hourly = response.Hourly()
-    hourly_series = list(map(lambda i: hourly.Series(i), range(0, hourly.SeriesLength())))
+    hourly_variables = list(map(lambda i: hourly.Variables(i), range(0, hourly.VariablesLength())))
 
-    temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_series))
-    precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_series))
+    temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_variables))
+    precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_variables))
 
     assert temperature_2m.ValuesLength() == 48
     assert precipitation.ValuesLength() == 48
