@@ -15,6 +15,7 @@ def test_fetch_all():
         "hourly": ["temperature_2m", "precipitation"],
         "start_date": "2023-08-01",
         "end_date": "2023-08-02",
+        "models": "era5_seamless"
         # 'timezone': 'auto',
         # 'current': ['temperature_2m','precipitation'],
         # 'current_weather': 1,
