@@ -8,7 +8,7 @@ This library is primarily designed for data-scientists to process weather data. 
 
 ## Basic Usage
 
-The following example gets an hourly temperature and precipitation forecast for Berlin. Additionally, the current temperature is retrieved. It is recommended to only specify the required weather variables.
+The following example gets an hourly temperature, wind speed and precipitation forecast for Berlin. Additionally, the current temperature and relative humidity is retrieved. It is recommended to only specify the required weather variables.
 
 ```python
 # pip install openmeteo-requests
@@ -20,8 +20,8 @@ om = openmeteo_requests.Client()
 params = {
     "latitude": 52.54,
     "longitude": 13.41,
-    "hourly": ["temperature_2m", "precipitation"],
-    "current": ["temperature_2m"]
+    "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+    "current": ["temperature_2m", "relative_humidity_2m"]
 }
 
 responses = om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
@@ -68,6 +68,8 @@ For `Pandas` you can prepare a data-frame from hourly data like follows:
 
 
 ```python
+import pandas as pd
+
 hourly_data = {"date": pd.date_range(
 	start = pd.to_datetime(hourly.Time(), unit = "s"),
 	end = pd.to_datetime(hourly.TimeEnd(), unit = "s"),
