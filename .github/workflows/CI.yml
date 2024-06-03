@@ -10,6 +10,6 @@ on:
 
 jobs:
   validation:
-    uses: microsoft/action-python/.github/workflows/validation.yml@0.7.2
+    uses: microsoft/action-python/.github/workflows/validation.yml@0.7.3
     with:
       workdir: '.'
