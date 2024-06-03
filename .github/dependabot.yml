@@ -24,6 +24,13 @@ updates:
       - dependency-type: direct
     commit-message:
       prefix: "fix: "
+    groups:
+      semantic:
+        patterns:
+          - "@semantic-release/*"
+          - "semantic-release"
+          - "semantic-release-pypi"
+          - "conventional-changelog-conventionalcommits"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
