@@ -2,7 +2,7 @@
 
 This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
 
-Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy` or `pandas` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be found on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
+Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy`, `pandas`, or `polars` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be found on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
 This library is primarily designed for data-scientists to process weather data. In combination with the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) data from 1940 onwards can be analyzed quickly.
 
@@ -64,8 +64,7 @@ hourly_wind_speed_10m = next(filter(lambda x: x.Variable() == Variable.wind_spee
 
 ### Pandas
 
-For `Pandas` you can prepare a data-frame from hourly data like follows:
-
+After using `NumPy` to create arrays for hourly data, you can use `Pandas` to create a DataFrame from hourly data like follows:
 
 ```python
 import pandas as pd
@@ -80,13 +79,43 @@ hourly_data["temperature_2m"] = hourly_temperature_2m
 hourly_data["precipitation"] = hourly_precipitation
 hourly_data["wind_speed_10m"] = hourly_wind_speed_10m
 
-hourly_dataframe = pd.DataFrame(data = hourly_data)
-print(hourly_dataframe)
-#date  temperature_2m  precipitation
-#0  2023-08-01 00:00:00       16.945999            1.7
-#1  2023-08-01 01:00:00       16.996000            2.1
-#2  2023-08-01 02:00:00       16.996000            1.0
-#3  2023-08-01 03:00:00       16.846001            0.2
+hourly_dataframe_pd = pd.DataFrame(data = hourly_data)
+print(hourly_dataframe_pd)
+#                    date  temperature_2m  precipitation  wind_speed_10m
+# 0   2024-06-21 00:00:00       17.437000            0.0        6.569383
+# 1   2024-06-21 01:00:00       17.087000            0.0        6.151683
+# 2   2024-06-21 02:00:00       16.786999            0.0        7.421590
+# 3   2024-06-21 03:00:00       16.337000            0.0        5.154416
+```
+
+### Polars
+
+Additionally, `Polars` can also be used to create a DataFrame from hourly data using the `NumPy` arrays created previously:
+
+```python
+import polars as pl
+from datetime import datetime, timedelta, timezone
+
+start = datetime.fromtimestamp(hourly.Time(), timezone.utc)
+end = datetime.fromtimestamp(hourly.TimeEnd(), timezone.utc)
+freq = timedelta(seconds = hourly.Interval())
+
+hourly_dataframe_pl = pl.select(
+    date = pl.datetime_range(start, end, freq, closed = "left"),
+    temperature_2m = hourly_temperature_2m,
+    precipitation = hourly_precipitation,
+    wind_speed_10m = hourly_wind_speed_10m
+)
+print(hourly_dataframe_pl)
+# ┌─────────────────────────┬────────────────┬───────────────┬────────────────┐
+# │ date                    ┆ temperature_2m ┆ precipitation ┆ wind_speed_10m │
+# │ ---                     ┆ ---            ┆ ---           ┆ ---            │
+# │ datetime[μs, UTC]       ┆ f32            ┆ f32           ┆ f32            │
+# ╞═════════════════════════╪════════════════╪═══════════════╪════════════════╡
+# │ 2024-06-21 00:00:00 UTC ┆ 17.437         ┆ 0.0           ┆ 6.569383       │
+# │ 2024-06-21 01:00:00 UTC ┆ 17.087         ┆ 0.0           ┆ 6.151683       │
+# │ 2024-06-21 02:00:00 UTC ┆ 16.786999      ┆ 0.0           ┆ 7.42159        │
+# │ 2024-06-21 03:00:00 UTC ┆ 16.337         ┆ 0.0           ┆ 5.154416       │
 ```
 
 ### Caching Data
@@ -114,6 +143,7 @@ om = openmeteo_requests.Client(session=retry_session)
 ```
 
 # TODO
+
 - Document multi location/timeinterval usage
 - Document FlatBuffers data structure
 - Document time start/end/interval
@@ -123,4 +153,5 @@ om = openmeteo_requests.Client(session=retry_session)
 - Consider dedicated pandas library to convert responses quickly
 
 # License
+
 MIT
