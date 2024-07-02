@@ -26,7 +26,7 @@ params = {
 
 responses = om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
 response = responses[0]
-print(f"Coordinates {response.Latitude()}°E {response.Longitude()}°N")
+print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
 print(f"Elevation {response.Elevation()} m asl")
 print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
 print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
