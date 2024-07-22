@@ -24,7 +24,11 @@ class Client:
     def _get(self, cls: type[T], url: str, params: any, method: str) -> list[T]:
         params["format"] = "flatbuffers"
 
-        response = self.session.request(method, url, params=params)
+        if method.upper() == "POST":
+            response = self.session.request("POST", url, data=params)
+        else:
+            response = self.session.request("GET", url, params=params)
+
         if response.status_code in [400, 429]:
             response_body = response.json()
             raise OpenMeteoRequestsError(response_body)
