@@ -46,7 +46,9 @@ class Client:
             pos += length + 4
         return messages
 
-    def weather_api(self, url: str, params: any, method: str = "GET", verify: bool | str | None = None) -> list[WeatherApiResponse]:
+    def weather_api(
+        self, url: str, params: any, method: str = "GET", verify: bool | str | None = None
+    ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
         return self._get(WeatherApiResponse, url, params, method, verify)
 
