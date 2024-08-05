@@ -21,6 +21,7 @@ class Client:
     def __init__(self, session: TSession | None = None):
         self.session = session or requests.Session()
 
+    #pylint: disable=too-many-arguments
     def _get(self, cls: type[T], url: str, params: any, method: str, verify: bool | str | None) -> list[T]:
         params["format"] = "flatbuffers"
 
