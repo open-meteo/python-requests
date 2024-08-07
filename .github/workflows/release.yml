@@ -1,3 +1,7 @@
+# Release system depends on:
+# - .releaserc.json (make sure to select the right branch)
+# - .github/workflows/semantic-pr-check.yml
+
 name: Release
 
 #on:
@@ -5,6 +9,7 @@ name: Release
 #    branches:
 #      - main
 
+# Only run releases manually
 on:
   workflow_dispatch:
 
@@ -33,6 +38,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.11
+      - name: Install semantic-release
+        run: |
+          npm install --no-save semantic-release conventional-changelog-conventionalcommits semantic-release-pypi
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
