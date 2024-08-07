@@ -12,25 +12,6 @@ updates:
       - dependency-type: direct
     commit-message:
       prefix: "fix: "
-  - package-ecosystem: npm
-    directory: "/"
-    schedule:
-      interval: daily
-      time: "13:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - patrick.zippenfenig
-    allow:
-      - dependency-type: direct
-    commit-message:
-      prefix: "fix: "
-    groups:
-      semantic:
-        patterns:
-          - "@semantic-release/*"
-          - "semantic-release"
-          - "semantic-release-pypi"
-          - "conventional-changelog-conventionalcommits"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
