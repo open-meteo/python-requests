@@ -22,13 +22,13 @@ class Client:
         self.session = session or requests.Session()
 
     # pylint: disable=too-many-arguments
-    def _get(self, cls: type[T], url: str, params: any, method: str, verify: bool | str | None) -> list[T]:
+    def _get(self, cls: type[T], url: str, params: any, method: str, verify: bool | str | None, **kwargs) -> list[T]:
         params["format"] = "flatbuffers"
 
         if method.upper() == "POST":
-            response = self.session.request("POST", url, data=params, verify=verify)
+            response = self.session.request("POST", url, data=params, verify=verify, **kwargs)
         else:
-            response = self.session.request("GET", url, params=params, verify=verify)
+            response = self.session.request("GET", url, params=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -48,10 +48,10 @@ class Client:
         return messages
 
     def weather_api(
-        self, url: str, params: any, method: str = "GET", verify: bool | str | None = None
+        self, url: str, params: any, method: str = "GET", verify: bool | str | None = None, **kwargs
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
-        return self._get(WeatherApiResponse, url, params, method, verify)
+        return self._get(WeatherApiResponse, url, params, method, verify, **kwargs)
 
     def __del__(self):
         """cleanup"""
