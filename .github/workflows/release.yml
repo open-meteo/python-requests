@@ -32,8 +32,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install semantic-release
-        run: npm install
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
