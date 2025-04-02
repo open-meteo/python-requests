@@ -38,7 +38,7 @@ jobs:
           python-version: 3.11
       - name: Install semantic-release
         run: |
-          npm install --no-save semantic-release conventional-changelog-conventionalcommits semantic-release-pypi
+          npm install --no-save semantic-release @semantic-release/git conventional-changelog-conventionalcommits semantic-release-pypi
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
