@@ -42,6 +42,44 @@ print(f"Current temperature_2m {current_temperature_2m.Value()}")
 print(f"Current relative_humidity_2m {current_relative_humidity_2m.Value()}")
 ```
 
+or the same but using async/wait:
+
+```python
+# pip install openmeteo-requests
+
+import openmeteo_requests
+from openmeteo_sdk.Variable import Variable
+import asyncio
+
+async def main():
+    om = openmeteo_requests.AsyncClient()
+    params = {
+        "latitude": 52.54,
+        "longitude": 13.41,
+        "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+        "current": ["temperature_2m", "relative_humidity_2m"]
+    }
+
+    responses = await om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
+    response = responses[0]
+    print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
+    print(f"Elevation {response.Elevation()} m asl")
+    print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
+    print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+
+    # Current values
+    current = response.Current()
+    current_variables = list(map(lambda i: current.Variables(i), range(0, current.VariablesLength())))
+    current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_variables))
+    current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_variables))
+
+    print(f"Current time {current.Time()}")
+    print(f"Current temperature_2m {current_temperature_2m.Value()}")
+    print(f"Current relative_humidity_2m {current_relative_humidity_2m.Value()}")
+
+asyncio.run(main())
+```
+
 Note 1: You can also supply a list of latitude and longitude coordinates to get data for multiple locations. The API will return a array of results, hence in this example, we only consider the first location with `response = responses[0]`.
 
 Note 2: Please note the function calls `()` for each attribute like `Latitude()`. Those function calls are necessary due to the FlatBuffers format to dynamically get data from an attribute without expensive parsing.
