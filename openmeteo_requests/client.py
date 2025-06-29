@@ -19,7 +19,7 @@ OpenWeatherResponseType: TypeAlias = WeatherApiResponse
 class Client:
     """Open-Meteo API Client"""
 
-    def __init__(self, session: niquests.Session | None = None):
+    def __init__(self, session: niquests.Session | None = None) -> None:
         self.session = session or niquests.Session()
         self._response_cls = WeatherApiResponse
 
@@ -80,7 +80,7 @@ class Client:
 class AsyncClient:
     """Asynchronous client for Open-Meteo API."""
 
-    def __init__(self, session: niquests.AsyncSession | None = None):
+    def __init__(self, session: niquests.AsyncSession | None = None) -> None:
         self._session = session or niquests.AsyncSession()
         self._closed: bool = False
         self._response_cls = WeatherApiResponse
