@@ -22,5 +22,5 @@ install:
     uv sync --group lint --group test
 
 #[doc('run tests')]
-test *args="":
+test *args:
     pytest {{args}}
