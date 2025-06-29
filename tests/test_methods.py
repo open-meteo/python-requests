@@ -45,7 +45,7 @@ def test_fetch_all():
 
     hourly = response.Hourly()
     hourly_variables = list(
-        map(lambda i: hourly.Variables(i), range(0, hourly.VariablesLength()))
+        map(lambda i: hourly.Variables(i), range(hourly.VariablesLength()))
     )
 
     temperature_2m = next(
@@ -107,7 +107,7 @@ async def test_async_fetch_all():
 
     hourly = response.Hourly()
     hourly_variables = list(
-        map(lambda i: hourly.Variables(i), range(0, hourly.VariablesLength()))
+        map(lambda i: hourly.Variables(i), range(hourly.VariablesLength()))
     )
 
     temperature_2m = next(
@@ -161,7 +161,6 @@ async def test_async_client_close():
 
 
 def test_int_client():
-    """
-    This test is marked implicitly as an integration test because the name contains "_init_"
+    """This test is marked implicitly as an integration test because the name contains "_init_"
     https://docs.pytest.org/en/6.2.x/example/markers.html#automatically-adding-markers-based-on-test-names
     """

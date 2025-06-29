@@ -28,7 +28,7 @@ class Client:
         url: str,
         params: ParamsType,
         method: str,
-        verify: bool | str | None,
+        verify: bool | str | None,  # noqa: FBT001
         **kwargs,
     ) -> list[OpenWeatherResponseType]:
         params["format"] = "flatbuffers"
@@ -57,7 +57,6 @@ class Client:
             message = self._response_cls.GetRootAs(data, pos + 4)
             messages.append(message)
             pos += length + 4
-        print(messages)
         return messages
 
     def weather_api(
@@ -65,7 +64,7 @@ class Client:
         url: str,
         params: ParamsType,
         method: str = "GET",
-        verify: bool | str | None = None,
+        verify: bool | str | None = None,  # noqa: FBT001
         **kwargs,
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
@@ -90,7 +89,7 @@ class AsyncClient:
         url: str,
         params: ParamsType,
         method: str,
-        verify: bool | str | None,
+        verify: bool | str | None,  # noqa: FBT001
         **kwargs,
     ) -> list[OpenWeatherResponseType]:
         params["format"] = "flatbuffers"
@@ -130,7 +129,7 @@ class AsyncClient:
         url: str,
         params: ParamsType,
         method: str = "GET",
-        verify: bool | str | None = None,
+        verify: bool | str | None = None,  # noqa: FBT001
         **kwargs,
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
