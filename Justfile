@@ -19,7 +19,7 @@ lint:
 
 #[doc('install project main+dev deps')]
 install:
-    uv sync --group lint --group test
+    uv sync --group dev --group lint --group test
 
 #[doc('run tests')]
 test *args:
