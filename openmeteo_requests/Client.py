@@ -2,84 +2,45 @@
 
 from __future__ import annotations
 
-from typing import TypeVar
+from collections.abc import MutableMapping
+from functools import partial
+from typing import Any
 
-import niquests as requests
+import niquests
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
+from typing_extensions import TypeAlias
 
-T = TypeVar("T")
+from openmeteo_requests.exceptions import OpenMeteoRequestsError
 
-
-class OpenMeteoRequestsError(Exception):
-    """Open-Meteo Error"""
+ParamsType = MutableMapping[str, Any]
+OpenWeatherResponseType: TypeAlias = WeatherApiResponse
 
 
 class Client:
     """Open-Meteo API Client"""
 
-    def __init__(self, session: requests.Session | None = None):
-        self.session = session or requests.Session()
+    def __init__(self, session: niquests.Session | None = None):
+        self.session = session or niquests.Session()
+        self._response_cls = WeatherApiResponse
 
-    # pylint: disable=too-many-arguments,too-many-positional-arguments
-    def _get(self, cls: type[T], url: str, params: any, method: str, verify: bool | str | None, **kwargs) -> list[T]:
-        params["format"] = "flatbuffers"
-
-        if method.upper() == "POST":
-            response = self.session.request("POST", url, data=params, verify=verify, **kwargs)
-        else:
-            response = self.session.request("GET", url, params=params, verify=verify, **kwargs)
-
-        if response.status_code in [400, 429]:
-            response_body = response.json()
-            raise OpenMeteoRequestsError(response_body)
-
-        response.raise_for_status()
-
-        data = response.content
-        messages = []
-        total = len(data)
-        pos = int(0)
-        while pos < total:
-            length = int.from_bytes(data[pos : pos + 4], byteorder="little")
-            message = cls.GetRootAs(data, pos + 4)
-            messages.append(message)
-            pos += length + 4
-        return messages
-
-    def weather_api(
-        self, url: str, params: any, method: str = "GET", verify: bool | str | None = None, **kwargs
-    ) -> list[WeatherApiResponse]:
-        """Get and decode as weather api"""
-        return self._get(WeatherApiResponse, url, params, method, verify, **kwargs)
-
-    def __del__(self):
-        """cleanup"""
-        self.session.close()
-
-
-# pylint: disable=too-few-public-methods
-class AsyncClient:
-    """Open-Meteo API Client"""
-
-    def __init__(self, session: requests.AsyncSession | None = None):
-        self.session = session or requests.AsyncSession()
-
-    # pylint: disable=too-many-arguments,too-many-positional-arguments
-    async def _get(
+    def _request(
         self,
-        cls: type[T],
         url: str,
-        params: any,
+        params: ParamsType,
         method: str,
         verify: bool | str | None,
         **kwargs,
-    ) -> list[T]:
+    ) -> list[OpenWeatherResponseType]:
         params["format"] = "flatbuffers"
 
         if method.upper() == "POST":
-            response = await self.session.request("POST", url, data=params, verify=verify, **kwargs)
+            response = self.session.post(
+                url, data=params, verify=verify, **kwargs
+            )
         else:
-            response = await self.session.request("GET", url, params=params, verify=verify, **kwargs)
+            response = self.session.get(
+                url, params=params, verify=verify, **kwargs
+            )
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -87,19 +48,96 @@ class AsyncClient:
 
         response.raise_for_status()
 
-        data = response.content
+        data: bytes = response.content or b""
         messages = []
         total = len(data)
         pos = 0
         while pos < total:
             length = int.from_bytes(data[pos : pos + 4], byteorder="little")
-            message = cls.GetRootAs(data, pos + 4)
+            message = self._response_cls.GetRootAs(data, pos + 4)
+            messages.append(message)
+            pos += length + 4
+        print(messages)
+        return messages
+
+    def weather_api(
+        self,
+        url: str,
+        params: ParamsType,
+        method: str = "GET",
+        verify: bool | str | None = None,
+        **kwargs,
+    ) -> list[WeatherApiResponse]:
+        """Get and decode as weather api"""
+        return self._request(url, params, method, verify, **kwargs)
+
+    def close(self) -> None:
+        """Close the client."""
+        self.session.close()
+
+
+# pylint: disable=too-few-public-methods
+class AsyncClient:
+    """Asynchronous client for Open-Meteo API."""
+
+    def __init__(self, session: niquests.AsyncSession | None = None):
+        self._session = session or niquests.AsyncSession()
+        self._closed: bool = False
+        self._response_cls = WeatherApiResponse
+
+    async def _request(
+        self,
+        url: str,
+        params: ParamsType,
+        method: str,
+        verify: bool | str | None,
+        **kwargs,
+    ) -> list[OpenWeatherResponseType]:
+        params["format"] = "flatbuffers"
+
+        response: niquests.Response
+        async with self._session as sess:
+            method = method.upper()
+            if method == "GET":
+                meth = partial(
+                    sess.get, url, params=params, verify=verify, **kwargs
+                )
+            if method == "POST":
+                meth = partial(
+                    sess.post, url, data=params, verify=verify, **kwargs
+                )
+            response = await meth()
+
+        if response.status_code in [400, 429]:
+            response_body = response.json()
+            raise OpenMeteoRequestsError(response_body)
+
+        response.raise_for_status()
+
+        data: bytes = response.content or b""
+        messages = []
+        total = len(data)
+        pos = 0
+        while pos < total:
+            length = int.from_bytes(data[pos : pos + 4], byteorder="little")
+            message = self._response_cls.GetRootAs(data, pos + 4)
             messages.append(message)
             pos += length + 4
         return messages
 
     async def weather_api(
-        self, url: str, params: any, method: str = "GET", verify: bool | str | None = None, **kwargs
+        self,
+        url: str,
+        params: ParamsType,
+        method: str = "GET",
+        verify: bool | str | None = None,
+        **kwargs,
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
-        return await self._get(WeatherApiResponse, url, params, method, verify, **kwargs)
+        return await self._request(url, dict(params), method, verify, **kwargs)
+
+    async def close(self) -> None:
+        """Close the client."""
+        if not self._closed:
+            await self._session.close()
+        self._closed = True
