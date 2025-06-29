@@ -74,7 +74,6 @@ addopts = [
     "-xq",
     "--cov=openmeteo_requests",
     "--cov-report=xml:coverage.xml",
-    # "--cov-append",
 ]
 markers = [
     "integration: marks as integration test",
@@ -104,13 +103,39 @@ docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
 select = [
-    "ASYNC",  # asyn
-    "E",  # 
-    "F",  # 
+    "A",  # flake8-builtins
+    # "ANN",  # flake8-annotations
+    "ARG",  # flake8-unused-arguments
+    "ASYNC",  # flake8-async
+    "B",  # falke8-bugbear
+    "BLE",  # flake8-blind-except
+    "C4",  # flake8-comprehensions
+    "C90",  # mccabe
+    # "D",  # pydocstyle
+    "E",  # pycodestyle (Error)
+    "EM",  # flake8-errmsg
+    "ERA",  # eradicate - commented code
+    "F",  #
+    "FA",  # flake8-future-annotations
+    "FBT",  # flake8-boolean-trap
     "I",  # isort
-    "Q",  # flake-quotes
-    "S",  # bandit
+    "ICN",  # flake8-import-conventions
+    "ISC",  # flake8-implicit-str-concat
+    "N",  # pep8-naming
+    "PIE",  # flake8-pie
+    "PT",  # flake8-pytest-style
+    "PYI",  # flake8-pyi
+    "Q",  # flake8-quotes
+    "RSE",  # flake8-raise
+    "RET",  # flake8-return
+    "S",  # flake8-bandit
+    "SIM",  # flake8-simplify
+    "SLF",  # flake8-self
+    "SLOT",  # flake8-slots
+    "T20",  # flake8-print
+    "TC",  # flake8-type-checking
     "UP",  # pyupgrade
+    "W",  # pycodestyle (Warning)
 ]
 ignore = []
 
@@ -123,4 +148,7 @@ fixable = [
 "tests/**/*.py" = [
     "E501",  # line-too-long
     "S101", # use-of-assert-detected
+    "ERA",
+    "T20",
+    "C417",
 ]
