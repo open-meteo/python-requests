@@ -87,8 +87,6 @@ async def test_async_fetch_all():
     responses = await om.weather_api(
         "https://archive-api.open-meteo.com/v1/archive", params=params
     )
-
-    # responses = await om.weather_api("https://archive-api.open-meteo.com/v1/archive", params=params)
     # responses = om.get("http://127.0.0.1:8080/v1/archive", params=params)
     assert len(responses) == 3
     response = responses[0]
@@ -130,6 +128,36 @@ async def test_async_fetch_all():
 
     # print(temperature_2m.ValuesAsNumpy())
     # print(precipitation.ValuesAsNumpy())
+
+
+async def test_async_client_close():
+    om = openmeteo_requests.AsyncClient()
+
+    params = {
+        "latitude": [52.54, 48.1, 48.4],
+        "longitude": [13.41, 9.31, 8.5],
+        "hourly": ["temperature_2m", "precipitation"],
+        "start_date": "2023-08-01",
+        "end_date": "2023-08-02",
+        "models": "era5_seamless",
+        # 'timezone': 'auto',
+        # 'current': ['temperature_2m','precipitation'],
+        # 'current_weather': 1,
+    }
+
+    responses = await om.weather_api(
+        "https://archive-api.open-meteo.com/v1/archive", params=params
+    )
+    assert responses
+
+    await om.close()
+
+    with pytest.raises(openmeteo_requests.OpenMeteoRequestsError):
+        await om.weather_api(
+            "https://archive-api.open-meteo.com/v1/archive", params=params
+        )
+
+    await om.close()  # does not break - idempotency
 
 
 def test_int_client():
