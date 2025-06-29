@@ -134,7 +134,13 @@ class AsyncClient:
         **kwargs,
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
-        return await self._request(url, dict(params), method, verify, **kwargs)
+        try:
+            return await self._request(
+                url, dict(params), method, verify, **kwargs
+            )
+        except Exception as e:
+            msg = f"failed to request {url}: {e}"
+            raise OpenMeteoRequestsError(msg) from e
 
     async def close(self) -> None:
         """Close the client."""
