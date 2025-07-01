@@ -108,10 +108,10 @@ After using `NumPy` to create arrays for hourly data, you can use `Pandas` to cr
 import pandas as pd
 
 hourly_data = {"date": pd.date_range(
-	start = pd.to_datetime(hourly.Time(), unit = "s"),
-	end = pd.to_datetime(hourly.TimeEnd(), unit = "s"),
-	freq = pd.Timedelta(seconds = hourly.Interval()),
-	inclusive = "left"
+    start = pd.to_datetime(hourly.Time(), unit = "s"),
+    end = pd.to_datetime(hourly.TimeEnd(), unit = "s"),
+    freq = pd.Timedelta(seconds = hourly.Interval()),
+    inclusive = "left"
 )}
 hourly_data["temperature_2m"] = hourly_temperature_2m
 hourly_data["precipitation"] = hourly_precipitation
@@ -180,7 +180,7 @@ om = openmeteo_requests.Client(session=retry_session)
 # Using the client object `om` will now cache all weather data
 ```
 
-# TODO
+## TODO
 
 - Document multi location/timeinterval usage
 - Document FlatBuffers data structure
@@ -190,6 +190,6 @@ om = openmeteo_requests.Client(session=retry_session)
 - Document endpoints for air quality, etc
 - Consider dedicated pandas library to convert responses quickly
 
-# License
+## License
 
 MIT

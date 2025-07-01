@@ -1,20 +1,9 @@
-### Development
+# Development
 
-Install dependencies
+For convenience, you can install [Just](https://github.com/casey/just) to run recipes defined in the [Justfile](./Justfile). Feel free to read the [Just/docs](https://just.systems/man/en/)
 
-```bash
-pip3 install .
-pip3 install ".[test]"
-pip3 install pytest-xdist
-pre-commit install
-```
+You can create a virtual environment directory via the `uv venv` command (the version is retrieved from the **.python-version** file).
 
-Run linter and tests
-```bash
-black .
-flake8
-bandit -r openmeteo_requests/
-pylint openmeteo_requests/
-python3 -m pytest tests/
-pre-commit run --all-files
-```
+Dependency installation is done via `uv sync --group dev --group lint --group --test` or by executing the `just install` recipe.
+
+Consider installing pre-commit hooks -> `pre-commit install`.

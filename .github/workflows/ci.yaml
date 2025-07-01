@@ -1,0 +1,58 @@
+name: Python Open-Meteo CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup:
+    defaults:
+      run:
+        working-directory: "."
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "pypy-3.9"
+          - "pypy-3.10"
+        os:
+          - ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python {{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      # https://github.com/astral-sh/setup-uv
+      - name: Install UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          activate-environment: true
+          enable-cache: true
+          ignore-nothing-to-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - uses: extractions/setup-just@v3
+        with:
+          just-version: 1.40.0
+
+      - name: Install the project
+        run: just install
+
+      - name: Check
+        run: just check
+
+      - name: Test
+        run: just test
