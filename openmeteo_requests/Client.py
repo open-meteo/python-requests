@@ -10,11 +10,13 @@ from typing import Any
 import niquests
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 
-from openmeteo_requests.exceptions import OpenMeteoRequestsError
-
-FLAT_BUFFERS_FORMAT = "flatbuffers"
+_FLAT_BUFFERS_FORMAT = "flatbuffers"
 
 ParamsType = MutableMapping[str, Any]
+
+
+class OpenMeteoRequestsError(Exception):
+    """Open-Meteo Error."""
 
 
 class HTTPVerb(str, Enum):
@@ -56,7 +58,7 @@ class Client:
         verify: bool | str | None = None,
         **kwargs,
     ) -> list[WeatherApiResponse]:
-        params["format"] = FLAT_BUFFERS_FORMAT
+        params["format"] = _FLAT_BUFFERS_FORMAT
 
         if method.upper() == HTTPVerb.GET:
             response = self._session.get(
@@ -124,7 +126,7 @@ class AsyncClient:
         verify: bool | str | None = None,
         **kwargs,
     ) -> list[WeatherApiResponse]:
-        params["format"] = FLAT_BUFFERS_FORMAT
+        params["format"] = _FLAT_BUFFERS_FORMAT
 
         response: niquests.Response
         async with self._session as sess:

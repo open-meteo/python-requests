@@ -138,7 +138,9 @@ select = [
     "UP",  # pyupgrade
     "W",  # pycodestyle (Warning)
 ]
-ignore = []
+ignore = [
+    "N999",  # https://docs.astral.sh/ruff/rules/invalid-module-name/
+]
 
 fixable = [
     "ALL",
