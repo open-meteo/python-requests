@@ -14,6 +14,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -137,7 +138,9 @@ select = [
     "UP",  # pyupgrade
     "W",  # pycodestyle (Warning)
 ]
-ignore = []
+ignore = [
+    "N999",  # https://docs.astral.sh/ruff/rules/invalid-module-name/
+]
 
 fixable = [
     "ALL",
@@ -149,6 +152,5 @@ fixable = [
     "E501",  # line-too-long
     "S101", # use-of-assert-detected
     "ERA",
-    "T20",
     "C417",
 ]
