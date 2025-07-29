@@ -1,10 +1,10 @@
 # Open-Meteo API Python Client
 
-This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
+This API client provides access to weather data from [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
 
-Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy`, `pandas`, or `polars` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be found on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
+A key feature is its use of FlatBuffers instead of JSON for data transfer. FlatBuffers are particularly efficient when dealing with large volumes of time-series data. The library supports [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) data transfer, allowing you to seamlessly analyze data directly within `numpy`, `pandas`, or `polars` without performance overhead. Schema definitions are available on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
-This library is primarily designed for data-scientists to process weather data. In combination with the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) data from 1940 onwards can be analyzed quickly.
+This library is aimed at data scientists who need to quickly process and analyze weather data, including historical data from 1940 onward through the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api).
 
 ## Basic Usage
 
@@ -14,32 +14,34 @@ The following example gets an hourly temperature, wind speed and precipitation f
 # pip install openmeteo-requests
 
 import openmeteo_requests
-from openmeteo_sdk.Variable import Variable
 
-om = openmeteo_requests.Client()
+openmeteo = openmeteo_requests.Client()
+
+# Make sure all required weather variables are listed here
+# The order of variables in hourly or daily is important to assign them correctly below
+url = "https://api.open-meteo.com/v1/forecast"
 params = {
-    "latitude": 52.54,
-    "longitude": 13.41,
-    "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
-    "current": ["temperature_2m", "relative_humidity_2m"]
+	"latitude": 52.52,
+	"longitude": 13.41,
+	"hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+	"current": ["temperature_2m", "relative_humidity_2m"],
 }
+responses = openmeteo.weather_api(url, params=params)
 
-responses = om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
+# Process first location. Add a for-loop for multiple locations or weather models
 response = responses[0]
-print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-print(f"Elevation {response.Elevation()} m asl")
-print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
-print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+print(f"Coordinates: {response.Latitude()}°N {response.Longitude()}°E")
+print(f"Elevation: {response.Elevation()} m asl")
+print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
 
-# Current values
+# Process current data. The order of variables needs to be the same as requested.
 current = response.Current()
-current_variables = list(map(lambda i: current.Variables(i), range(0, current.VariablesLength())))
-current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_variables))
-current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_variables))
+current_temperature_2m = current.Variables(0).Value()
+current_relative_humidity_2m = current.Variables(1).Value()
 
-print(f"Current time {current.Time()}")
-print(f"Current temperature_2m {current_temperature_2m.Value()}")
-print(f"Current relative_humidity_2m {current_relative_humidity_2m.Value()}")
+print(f"Current time: {current.Time()}")
+print(f"Current temperature_2m: {current_temperature_2m}")
+print(f"Current relative_humidity_2m: {current_relative_humidity_2m}")
 ```
 
 or the same but using async/wait:
