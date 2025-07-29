@@ -187,7 +187,7 @@ om = openmeteo_requests.Client(session=retry_session)
 
 ### Multiple Locations / Models
 
-If you are requesting data for multiple locations or models, you’ll receive an array of results. To access all of the data, replace `response = responses[0]` with a loop that iterates through the responses array, allowing you to process each location or model’s data.
+If you are requesting data for multiple locations or models, you’ll receive an array of results. To access all of the data, replace `response = responses[0]` with a loop that iterates through the responses array, allowing you to process each location or model’s data. See [multiple locations & models](#multiple-locations--models) for more information.
 
 ```
 ...
