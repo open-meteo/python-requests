@@ -59,14 +59,12 @@ class Client:
     ) -> list[WeatherApiResponse]:
         params["format"] = _FLAT_BUFFERS_FORMAT
 
-        if method.upper() == HTTPVerb.GET:
-            response = self._session.get(
-                url, params=params, verify=verify, **kwargs
-            )
-        if method.upper() == HTTPVerb.POST:
-            response = self._session.post(
-                url, data=params, verify=verify, **kwargs
-            )
+        with self._session as sess:
+            method = method.upper()
+            if method == HTTPVerb.GET:
+                response = sess.get(url, params=params, verify=verify, **kwargs)
+            if method == HTTPVerb.POST:
+                response = sess.post(url, data=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -120,11 +118,11 @@ class AsyncClient:
         response: niquests.Response
         async with self._session as sess:
             method = method.upper()
-            if method == "GET":
+            if method == HTTPVerb.GET:
                 meth = partial(
                     sess.get, url, params=params, verify=verify, **kwargs
                 )
-            if method == "POST":
+            if method == HTTPVerb.POST:
                 meth = partial(
                     sess.post, url, data=params, verify=verify, **kwargs
                 )
