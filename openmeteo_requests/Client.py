@@ -47,7 +47,6 @@ class Client:
     def __init__(self, session: niquests.Session | None = None) -> None:
         self._session = session or niquests.Session()
         self._response_cls = WeatherApiResponse
-        self._closed: bool | None = None
 
     def _request(
         self,
@@ -87,10 +86,6 @@ class Client:
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
         try:
-            if self._closed:
-                msg = "Unavailable connection"
-                raise ConnectionError(msg)
-
             return self._request(
                 url=url,
                 method=method,
@@ -101,12 +96,6 @@ class Client:
         except Exception as e:
             msg = f"failed to request {url!r}: {e}"
             raise OpenMeteoRequestsError(msg) from e
-
-    def close(self) -> None:
-        """Close the client."""
-        # closing session may not be enough here (niquests)
-        self._session.close()
-        self._closed = True
 
 
 # pylint: disable=too-few-public-methods
@@ -169,7 +158,3 @@ class AsyncClient:
         except Exception as e:
             msg = f"failed to request {url!r}: {e}"
             raise OpenMeteoRequestsError(msg) from e
-
-    async def close(self) -> None:
-        """Close the client."""
-        await self._session.close()
