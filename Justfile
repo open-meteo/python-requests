@@ -7,7 +7,7 @@ build:
     uv build
 
 # install project deps
-sync:
+install:
     uv sync --group dev --group lint --group test
 
 # check code
