@@ -47,7 +47,6 @@ class Client:
     def __init__(self, session: niquests.Session | None = None) -> None:
         self._session = session or niquests.Session()
         self._response_cls = WeatherApiResponse
-        self._closed: bool | None = None
 
     def _request(
         self,
@@ -60,14 +59,12 @@ class Client:
     ) -> list[WeatherApiResponse]:
         params["format"] = _FLAT_BUFFERS_FORMAT
 
-        if method.upper() == HTTPVerb.GET:
-            response = self._session.get(
-                url, params=params, verify=verify, **kwargs
-            )
-        if method.upper() == HTTPVerb.POST:
-            response = self._session.post(
-                url, data=params, verify=verify, **kwargs
-            )
+        with self._session as sess:
+            method = method.upper()
+            if method == HTTPVerb.GET:
+                response = sess.get(url, params=params, verify=verify, **kwargs)
+            if method == HTTPVerb.POST:
+                response = sess.post(url, data=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -87,10 +84,6 @@ class Client:
     ) -> list[WeatherApiResponse]:
         """Get and decode as weather api"""
         try:
-            if self._closed:
-                msg = "Unavailable connection"
-                raise ConnectionError(msg)
-
             return self._request(
                 url=url,
                 method=method,
@@ -101,12 +94,6 @@ class Client:
         except Exception as e:
             msg = f"failed to request {url!r}: {e}"
             raise OpenMeteoRequestsError(msg) from e
-
-    def close(self) -> None:
-        """Close the client."""
-        # closing session may not be enough here (niquests)
-        self._session.close()
-        self._closed = True
 
 
 # pylint: disable=too-few-public-methods
@@ -131,11 +118,11 @@ class AsyncClient:
         response: niquests.Response
         async with self._session as sess:
             method = method.upper()
-            if method == "GET":
+            if method == HTTPVerb.GET:
                 meth = partial(
                     sess.get, url, params=params, verify=verify, **kwargs
                 )
-            if method == "POST":
+            if method == HTTPVerb.POST:
                 meth = partial(
                     sess.post, url, data=params, verify=verify, **kwargs
                 )
@@ -169,7 +156,3 @@ class AsyncClient:
         except Exception as e:
             msg = f"failed to request {url!r}: {e}"
             raise OpenMeteoRequestsError(msg) from e
-
-    async def close(self) -> None:
-        """Close the client."""
-        await self._session.close()

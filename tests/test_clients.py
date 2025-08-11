@@ -80,18 +80,9 @@ class TestClient:
         assert temperature_2m.ValuesLength() == 48
         assert precipitation.ValuesLength() == 48
 
-    def test_client_close(
-        self, client: Client, url: str, params: _ParamsType
-    ) -> None:
-        responses = client.weather_api(url=url, params=params)
-        assert responses
-
-        client.close()
-
+    def test_empty_url_error(self, client: Client, params: _ParamsType) -> None:
         with pytest.raises(OpenMeteoRequestsError):
-            client.weather_api(url=url, params=params)
-
-        client.close()  # does not break - idempotency
+            client.weather_api(url="", params=params)
 
 
 @pytest.mark.asyncio
@@ -132,18 +123,11 @@ class TestAsyncClient:
         assert temperature_2m.ValuesLength() == 48
         assert precipitation.ValuesLength() == 48
 
-    async def test_async_client_close(
-        self, async_client: AsyncClient, url: str, params: _ParamsType
+    async def test_empty_url_error(
+        self, async_client: AsyncClient, params: _ParamsType
     ) -> None:
-        responses = await async_client.weather_api(url=url, params=params)
-        assert responses
-
-        await async_client.close()
-
         with pytest.raises(OpenMeteoRequestsError):
-            await async_client.weather_api(url=url, params=params)
-
-        await async_client.close()  # does not break - idempotency
+            await async_client.weather_api(url="", params=params)
 
 
 def test_int_client():
