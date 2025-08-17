@@ -59,12 +59,16 @@ class Client:
     ) -> list[WeatherApiResponse]:
         params["format"] = _FLAT_BUFFERS_FORMAT
 
-        with self._session as sess:
-            method = method.upper()
-            if method == HTTPVerb.GET:
-                response = sess.get(url, params=params, verify=verify, **kwargs)
-            if method == HTTPVerb.POST:
-                response = sess.post(url, data=params, verify=verify, **kwargs)
+        method = method.upper()
+        if method == HTTPVerb.GET:
+            meth = partial(
+                self._session.get, url, params=params, verify=verify, **kwargs
+            )
+        if method == HTTPVerb.POST:
+            meth = partial(
+                self._session.post, url, data=params, verify=verify, **kwargs
+            )
+        response: niquests.Response = meth()
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -115,18 +119,16 @@ class AsyncClient:
     ) -> list[WeatherApiResponse]:
         params["format"] = _FLAT_BUFFERS_FORMAT
 
-        response: niquests.Response
-        async with self._session as sess:
-            method = method.upper()
-            if method == HTTPVerb.GET:
-                meth = partial(
-                    sess.get, url, params=params, verify=verify, **kwargs
-                )
-            if method == HTTPVerb.POST:
-                meth = partial(
-                    sess.post, url, data=params, verify=verify, **kwargs
-                )
-            response = await meth()
+        method = method.upper()
+        if method == HTTPVerb.GET:
+            meth = partial(
+                self._session.get, url, params=params, verify=verify, **kwargs
+            )
+        if method == HTTPVerb.POST:
+            meth = partial(
+                self._session.post, url, data=params, verify=verify, **kwargs
+            )
+        response: niquests.Response = await meth()
 
         if response.status_code in [400, 429]:
             response_body = response.json()
