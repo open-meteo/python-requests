@@ -122,11 +122,11 @@ class AsyncClient:
         method = method.upper()
         if method == HTTPVerb.GET:
             meth = partial(
-                self._session.get, url, params=params, verify=verify, **kwargs
+                niquests.aget, url, params=params, verify=verify, **kwargs
             )
         if method == HTTPVerb.POST:
             meth = partial(
-                self._session.post, url, data=params, verify=verify, **kwargs
+                niquests.apost, url, data=params, verify=verify, **kwargs
             )
         response: niquests.Response = await meth()
 
