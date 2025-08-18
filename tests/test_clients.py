@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import nullcontext as does_not_raise
 from typing import Any
 
 import pytest
