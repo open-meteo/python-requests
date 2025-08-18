@@ -60,9 +60,9 @@ class Client:
 
         method = method.upper()
         if method == HTTPVerb.POST:
-            response = self._session.post(url, params=params, verify=verify, **kwargs)
+            response = self._session.post(url, data=params, verify=verify, **kwargs)
         else:
-            response = self._session.get(url, data=params, verify=verify, **kwargs)
+            response = self._session.get(url, params=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -104,8 +104,7 @@ class AsyncClient:
     """Asynchronous client for Open-Meteo API."""
 
     def __init__(self, session: niquests.AsyncSession | None = None) -> None:
-        self._close_session = session is None
-        self._session = session or niquests.AsyncSession()
+        self._session = session
 
     async def _request(
         self,
@@ -120,9 +119,15 @@ class AsyncClient:
 
         method = method.upper()
         if method == HTTPVerb.POST:
-            response = await niquests.apost(url, params=params, verify=verify, **kwargs)
+            if self._session:
+                response = await self._session.post(url, data=params, verify=verify, **kwargs)
+            else :
+                response = await niquests.apost(url, data=params, verify=verify, **kwargs)
         else:
-            response = await niquests.aget(url, data=params, verify=verify, **kwargs)
+            if self._session:
+                response = await self._session.get(url, params=params, verify=verify, **kwargs)
+            else:
+                response = await niquests.aget(url, params=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
@@ -152,8 +157,3 @@ class AsyncClient:
         except Exception as e:
             msg = f"failed to request {url!r}: {e}"
             raise OpenMeteoRequestsError(msg) from e
-
-    def __del__(self):
-        """cleanup"""
-        if self._close_session:
-            self._session.close()
