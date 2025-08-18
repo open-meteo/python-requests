@@ -97,7 +97,7 @@ class TestClient:
         # expected result -> the session is already closed -> failure
         # actual result -> OK. Niquests seems to allow reuse of closed sessions
         client.weather_api(url=url, params=params)
-        #with pytest.raises(OpenMeteoRequestsError):
+        # with pytest.raises(OpenMeteoRequestsError):
         _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
 
 

@@ -121,7 +121,7 @@ class AsyncClient:
         if method == HTTPVerb.POST:
             if self._session:
                 response = await self._session.post(url, data=params, verify=verify, **kwargs)
-            else :
+            else:
                 response = await niquests.apost(url, data=params, verify=verify, **kwargs)
         else:
             if self._session:
