@@ -29,8 +29,7 @@ def _process_fetchall_basic_responses(responses: list) -> None:
 
     temperature_2m = next(
         filter(
-            lambda x: x.Variable() == Variable.temperature
-            and x.Altitude() == 2,
+            lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2,
             hourly_variables,
         )
     )
@@ -79,9 +78,7 @@ def params() -> _ParamsType:
 
 
 class TestClient:
-    def test_fetch_all(
-        self, client: Client, url: str, params: _ParamsType
-    ) -> None:
+    def test_fetch_all(self, client: Client, url: str, params: _ParamsType) -> None:
         responses = client.weather_api(url=url, params=params)
         _process_fetchall_basic_responses(responses)
 
@@ -108,9 +105,7 @@ class TestClient:
         # expected result -> the session is already closed -> failure
         # actual result -> OK (which might NOT be good)
         client.weather_api(url=url, params=params)
-        _process_fetchall_basic_responses(
-            client.weather_api(url=url, params=params)
-        )
+        _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
 
 
 @pytest.mark.asyncio
