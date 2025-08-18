@@ -5,9 +5,40 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from niquests import AsyncSession, Session
 from openmeteo_sdk.Variable import Variable
 
 from openmeteo_requests import AsyncClient, Client, OpenMeteoRequestsError
+
+
+def _process_fetchall_basic_responses(responses: list) -> None:
+    assert len(responses) == 3
+    response = responses[0]
+    assert response.Latitude() == pytest.approx(52.5)
+    assert response.Longitude() == pytest.approx(13.4)
+    response = responses[1]
+    assert response.Latitude() == pytest.approx(48.1)
+    assert response.Longitude() == pytest.approx(9.3)
+    response = responses[0]
+
+    hourly = response.Hourly()
+    hourly_variables = list(map(lambda i: hourly.Variables(i), range(hourly.VariablesLength())))
+
+    temperature_2m = next(
+        filter(
+            lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2,
+            hourly_variables,
+        )
+    )
+    precipitation = next(
+        filter(
+            lambda x: x.Variable() == Variable.precipitation,
+            hourly_variables,
+        )
+    )
+
+    assert temperature_2m.ValuesLength() == 48
+    assert precipitation.ValuesLength() == 48
 
 
 @pytest.fixture
@@ -44,45 +75,29 @@ def params() -> _ParamsType:
 
 
 class TestClient:
-    def test_fetch_all(
-        self, client: Client, url: str, params: _ParamsType
-    ) -> None:
+    def test_fetch_all(self, client: Client, url: str, params: _ParamsType) -> None:
         responses = client.weather_api(url=url, params=params)
-
-        assert len(responses) == 3
-        response = responses[0]
-        assert response.Latitude() == pytest.approx(52.5)
-        assert response.Longitude() == pytest.approx(13.4)
-        response = responses[1]
-        assert response.Latitude() == pytest.approx(48.1)
-        assert response.Longitude() == pytest.approx(9.3)
-        response = responses[0]
-
-        hourly = response.Hourly()
-        hourly_variables = list(
-            map(lambda i: hourly.Variables(i), range(hourly.VariablesLength()))
-        )
-
-        temperature_2m = next(
-            filter(
-                lambda x: x.Variable() == Variable.temperature
-                and x.Altitude() == 2,
-                hourly_variables,
-            )
-        )
-        precipitation = next(
-            filter(
-                lambda x: x.Variable() == Variable.precipitation,
-                hourly_variables,
-            )
-        )
-
-        assert temperature_2m.ValuesLength() == 48
-        assert precipitation.ValuesLength() == 48
+        _process_fetchall_basic_responses(responses)
 
     def test_empty_url_error(self, client: Client, params: _ParamsType) -> None:
         with pytest.raises(OpenMeteoRequestsError):
             client.weather_api(url="", params=params)
+
+    def test_sequential_requests_with_common_session(self, url: str, params: _ParamsType) -> None:
+        session = Session()
+        client = Client(session)
+        try:
+            # OK
+            _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
+            # must not fail
+            _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
+        finally:
+            session.close()
+        # expected result -> the session is already closed -> failure
+        # actual result -> OK. Niquests seems to allow reuse of closed sessions
+        client.weather_api(url=url, params=params)
+        # with pytest.raises(OpenMeteoRequestsError):
+        _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
 
 
 @pytest.mark.asyncio
@@ -91,43 +106,27 @@ class TestAsyncClient:
         self, async_client: AsyncClient, url: str, params: _ParamsType
     ) -> None:
         responses = await async_client.weather_api(url=url, params=params)
+        _process_fetchall_basic_responses(responses)
 
-        assert len(responses) == 3
-        response = responses[0]
-        assert response.Latitude() == pytest.approx(52.5)
-        assert response.Longitude() == pytest.approx(13.4)
-        response = responses[1]
-        assert response.Latitude() == pytest.approx(48.1)
-        assert response.Longitude() == pytest.approx(9.3)
-        response = responses[0]
-
-        hourly = response.Hourly()
-        hourly_variables = list(
-            map(lambda i: hourly.Variables(i), range(hourly.VariablesLength()))
-        )
-
-        temperature_2m = next(
-            filter(
-                lambda x: x.Variable() == Variable.temperature
-                and x.Altitude() == 2,
-                hourly_variables,
-            )
-        )
-        precipitation = next(
-            filter(
-                lambda x: x.Variable() == Variable.precipitation,
-                hourly_variables,
-            )
-        )
-
-        assert temperature_2m.ValuesLength() == 48
-        assert precipitation.ValuesLength() == 48
-
-    async def test_empty_url_error(
-        self, async_client: AsyncClient, params: _ParamsType
-    ) -> None:
+    async def test_empty_url_error(self, async_client: AsyncClient, params: _ParamsType) -> None:
         with pytest.raises(OpenMeteoRequestsError):
             await async_client.weather_api(url="", params=params)
+
+    async def test_sequential_requests_with_common_session(
+        self, url: str, params: _ParamsType
+    ) -> None:
+        session = AsyncSession()
+        client = AsyncClient(session)
+        try:
+            # OK
+            _process_fetchall_basic_responses(await client.weather_api(url=url, params=params))
+            # must not fail
+            _process_fetchall_basic_responses(await client.weather_api(url=url, params=params))
+        finally:
+            await session.close()
+        # The session is already closed -> failure
+        with pytest.raises(OpenMeteoRequestsError):
+            _process_fetchall_basic_responses(await client.weather_api(url=url, params=params))
 
 
 def test_int_client():

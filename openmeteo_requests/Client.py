@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import MutableMapping
 from enum import Enum
-from functools import partial
 from typing import Any
 
 import niquests
@@ -45,8 +44,8 @@ class Client:
     """Open-Meteo API Client"""
 
     def __init__(self, session: niquests.Session | None = None) -> None:
+        self._close_session = session is None
         self._session = session or niquests.Session()
-        self._response_cls = WeatherApiResponse
 
     def _request(
         self,
@@ -59,19 +58,18 @@ class Client:
     ) -> list[WeatherApiResponse]:
         params["format"] = _FLAT_BUFFERS_FORMAT
 
-        with self._session as sess:
-            method = method.upper()
-            if method == HTTPVerb.GET:
-                response = sess.get(url, params=params, verify=verify, **kwargs)
-            if method == HTTPVerb.POST:
-                response = sess.post(url, data=params, verify=verify, **kwargs)
+        method = method.upper()
+        if method == HTTPVerb.POST:
+            response = self._session.post(url, data=params, verify=verify, **kwargs)
+        else:
+            response = self._session.get(url, params=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
             raise OpenMeteoRequestsError(response_body)
 
         response.raise_for_status()
-        return _process_response(response=response, handler=self._response_cls)
+        return _process_response(response=response, handler=WeatherApiResponse)
 
     def weather_api(
         self,
@@ -95,14 +93,18 @@ class Client:
             msg = f"failed to request {url!r}: {e}"
             raise OpenMeteoRequestsError(msg) from e
 
+    def __del__(self):
+        """cleanup"""
+        if self._close_session:
+            self._session.close()
+
 
 # pylint: disable=too-few-public-methods
 class AsyncClient:
     """Asynchronous client for Open-Meteo API."""
 
     def __init__(self, session: niquests.AsyncSession | None = None) -> None:
-        self._session = session or niquests.AsyncSession()
-        self._response_cls = WeatherApiResponse
+        self._session = session
 
     async def _request(
         self,
@@ -115,25 +117,24 @@ class AsyncClient:
     ) -> list[WeatherApiResponse]:
         params["format"] = _FLAT_BUFFERS_FORMAT
 
-        response: niquests.Response
-        async with self._session as sess:
-            method = method.upper()
-            if method == HTTPVerb.GET:
-                meth = partial(
-                    sess.get, url, params=params, verify=verify, **kwargs
-                )
-            if method == HTTPVerb.POST:
-                meth = partial(
-                    sess.post, url, data=params, verify=verify, **kwargs
-                )
-            response = await meth()
+        method = method.upper()
+        if method == HTTPVerb.POST:
+            if self._session:
+                response = await self._session.post(url, data=params, verify=verify, **kwargs)
+            else:
+                response = await niquests.apost(url, data=params, verify=verify, **kwargs)
+        else:
+            if self._session:
+                response = await self._session.get(url, params=params, verify=verify, **kwargs)
+            else:
+                response = await niquests.aget(url, params=params, verify=verify, **kwargs)
 
         if response.status_code in [400, 429]:
             response_body = response.json()
             raise OpenMeteoRequestsError(response_body)
 
         response.raise_for_status()
-        return _process_response(response=response, handler=self._response_cls)
+        return _process_response(response=response, handler=WeatherApiResponse)
 
     async def weather_api(
         self,
