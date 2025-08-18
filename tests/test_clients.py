@@ -23,9 +23,7 @@ def _process_fetchall_basic_responses(responses: list) -> None:
     response = responses[0]
 
     hourly = response.Hourly()
-    hourly_variables = list(
-        map(lambda i: hourly.Variables(i), range(hourly.VariablesLength()))
-    )
+    hourly_variables = list(map(lambda i: hourly.Variables(i), range(hourly.VariablesLength())))
 
     temperature_2m = next(
         filter(
@@ -86,20 +84,14 @@ class TestClient:
         with pytest.raises(OpenMeteoRequestsError):
             client.weather_api(url="", params=params)
 
-    def test_sequential_requests_with_common_session(
-        self, url: str, params: _ParamsType
-    ) -> None:
+    def test_sequential_requests_with_common_session(self, url: str, params: _ParamsType) -> None:
         session = Session()
         client = Client(session)
         try:
             # OK
-            _process_fetchall_basic_responses(
-                client.weather_api(url=url, params=params)
-            )
+            _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
             # must not fail
-            _process_fetchall_basic_responses(
-                client.weather_api(url=url, params=params)
-            )
+            _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
         finally:
             session.close()
         # expected result -> the session is already closed -> failure
@@ -116,9 +108,7 @@ class TestAsyncClient:
         responses = await async_client.weather_api(url=url, params=params)
         _process_fetchall_basic_responses(responses)
 
-    async def test_empty_url_error(
-        self, async_client: AsyncClient, params: _ParamsType
-    ) -> None:
+    async def test_empty_url_error(self, async_client: AsyncClient, params: _ParamsType) -> None:
         with pytest.raises(OpenMeteoRequestsError):
             await async_client.weather_api(url="", params=params)
 
@@ -129,22 +119,16 @@ class TestAsyncClient:
         client = AsyncClient(session)
         try:
             # OK
-            _process_fetchall_basic_responses(
-                await client.weather_api(url=url, params=params)
-            )
+            _process_fetchall_basic_responses(await client.weather_api(url=url, params=params))
             # must not fail
-            _process_fetchall_basic_responses(
-                await client.weather_api(url=url, params=params)
-            )
+            _process_fetchall_basic_responses(await client.weather_api(url=url, params=params))
         finally:
             await session.close()
         # expected result -> the session is already closed -> failure
         # actual -> no use of the session passed in
         # with pytest.raises(OpenMeteoRequestsError):
         with does_not_raise():
-            _process_fetchall_basic_responses(
-                await client.weather_api(url=url, params=params)
-            )
+            _process_fetchall_basic_responses(await client.weather_api(url=url, params=params))
 
 
 def test_int_client():
