@@ -1,6 +1,10 @@
 # Open-Meteo API Python Client
 
+<<<<<<< HEAD
 This API client provides access to weather data from [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
+=======
+This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com).
+>>>>>>> main
 
 A key feature is its use of FlatBuffers instead of JSON for data transfer. FlatBuffers are particularly efficient when dealing with large volumes of time-series data. The library supports [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) data transfer, allowing you to seamlessly analyze data directly within `numpy`, `pandas`, or `polars` without performance overhead. Schema definitions are available on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
@@ -8,7 +12,13 @@ This library is aimed at data scientists who need to quickly process and analyze
 
 ## Basic Usage
 
+<<<<<<< HEAD
 The following example gets an hourly forecast (temperature, wind speed, and precipitation) for Berlin, and also retrieves the current temperature and humidity. To improve efficiency, request only the necessary variables.
+=======
+The following example gets an hourly temperature, wind speed and precipitation forecast for Berlin.
+Additionally, the current temperature and relative humidity is retrieved.
+It is recommended to only specify the required weather variables.
+>>>>>>> main
 
 ```python
 # pip install openmeteo-requests
