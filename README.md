@@ -1,10 +1,6 @@
 # Open-Meteo API Python Client
 
-<<<<<<< HEAD
 This API client provides access to weather data from [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `requests`.
-=======
-This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com).
->>>>>>> main
 
 A key feature is its use of FlatBuffers instead of JSON for data transfer. FlatBuffers are particularly efficient when dealing with large volumes of time-series data. The library supports [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) data transfer, allowing you to seamlessly analyze data directly within `numpy`, `pandas`, or `polars` without performance overhead. Schema definitions are available on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
@@ -12,13 +8,7 @@ This library is aimed at data scientists who need to quickly process and analyze
 
 ## Basic Usage
 
-<<<<<<< HEAD
 The following example gets an hourly forecast (temperature, wind speed, and precipitation) for Berlin, and also retrieves the current temperature and humidity. To improve efficiency, request only the necessary variables.
-=======
-The following example gets an hourly temperature, wind speed and precipitation forecast for Berlin.
-Additionally, the current temperature and relative humidity is retrieved.
-It is recommended to only specify the required weather variables.
->>>>>>> main
 
 ```python
 # pip install openmeteo-requests
@@ -95,7 +85,7 @@ async def main():
 asyncio.run(main())
 ```
 
-Note 1: To retrieve data for multiple locations, you can provide a list of latitude and longitude coordinates. The API will return an array of results, one for each location. In the examples, we only demonstrate processing data from the first location `response = responses[0]` for brevity.
+Note 1: To retrieve data for multiple locations, you can provide a list of latitude and longitude coordinates. The API will return an array of results, one for each location. In the examples, we only demonstrate processing data from the first location `response = responses[0]` for brevity. See [multiple locations & models](#multiple-locations--models) for more information.
 
 Note 2: Due to the FlatBuffers data format, accessing each attribute, like `Latitude`, requires a function call (e.g., `Latitude()`). This approach allows for efficient data access without the need for expensive parsing.
 
@@ -190,17 +180,18 @@ from retry_requests import retry
 # Setup the Open-Meteo API client with a cache and retry mechanism
 cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
 retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
-om = openmeteo_requests.Client(session=retry_session)
+openmeteo = openmeteo_requests.Client(session=retry_session)
 
-# Using the client object `om` will now cache all weather data
+# Using the client object `openmeteo` will now cache all weather data
 ```
 
 ### Multiple Locations / Models
 
-If you are requesting data for multiple locations or models, you’ll receive an array of results. To access all of the data, replace `response = responses[0]` with a loop that iterates through the responses array, allowing you to process each location or model’s data. See [multiple locations & models](#multiple-locations--models) for more information.
+If you are requesting data for multiple locations or models, you’ll receive an array of results. To access all of the data, replace `response = responses[0]` with a loop that iterates through the responses array, allowing you to process each location or model’s data.
 
-```
+```python
 ...
+
 params = {
 	"latitude": [52.52, 50.1155],
 	"longitude": [13.41, 8.6842],
