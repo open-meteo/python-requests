@@ -1,47 +1,47 @@
 # Open-Meteo API Python Client
 
-This ia an API client to get weather data from the [Open-Meteo Weather API](https://open-meteo.com).
+This API client provides access to weather data from [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `niquests` and compatible with the `requests` library.
 
-Instead of using JSON, the API client uses FlatBuffers to transfer data. Encoding data in FlatBuffers is more efficient for long time-series data. Data can be transferred to `numpy`, `pandas`, or `polars` using [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) to analyze large amount of data quickly. The schema definition files can be found on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
+A key feature is its use of FlatBuffers instead of JSON for data transfer. FlatBuffers are particularly efficient when dealing with large volumes of time-series data. The library supports [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) data transfer, allowing you to seamlessly analyze data directly within `numpy`, `pandas`, or `polars` without performance overhead. Schema definitions are available on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
-This library is primarily designed for data-scientists to process weather data. In combination with the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) data from 1940 onwards can be analyzed quickly.
+This library is aimed at data scientists who need to quickly process and analyze weather data, including historical data from 1940 onward through the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api).
 
 ## Basic Usage
 
-The following example gets an hourly temperature, wind speed and precipitation forecast for Berlin.
-Additionally, the current temperature and relative humidity is retrieved.
-It is recommended to only specify the required weather variables.
+The following example gets an hourly forecast (temperature, wind speed, and precipitation) for Berlin, and also retrieves the current temperature and humidity. To improve efficiency, request only the necessary variables.
 
 ```python
 # pip install openmeteo-requests
 
 import openmeteo_requests
-from openmeteo_sdk.Variable import Variable
 
-om = openmeteo_requests.Client()
+openmeteo = openmeteo_requests.Client()
+
+# Make sure all required weather variables are listed here
+# The order of variables in hourly or daily is important to assign them correctly below
+url = "https://api.open-meteo.com/v1/forecast"
 params = {
-    "latitude": 52.54,
-    "longitude": 13.41,
-    "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
-    "current": ["temperature_2m", "relative_humidity_2m"]
+	"latitude": 52.52,
+	"longitude": 13.41,
+	"hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+	"current": ["temperature_2m", "relative_humidity_2m"],
 }
+responses = openmeteo.weather_api(url, params=params)
 
-responses = om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
+# Process first location. Add a for-loop for multiple locations or weather models
 response = responses[0]
-print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-print(f"Elevation {response.Elevation()} m asl")
-print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
-print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+print(f"Coordinates: {response.Latitude()}°N {response.Longitude()}°E")
+print(f"Elevation: {response.Elevation()} m asl")
+print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
 
-# Current values
+# Process current data. The order of variables needs to be the same as requested.
 current = response.Current()
-current_variables = list(map(lambda i: current.Variables(i), range(0, current.VariablesLength())))
-current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_variables))
-current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_variables))
+current_temperature_2m = current.Variables(0).Value()
+current_relative_humidity_2m = current.Variables(1).Value()
 
-print(f"Current time {current.Time()}")
-print(f"Current temperature_2m {current_temperature_2m.Value()}")
-print(f"Current relative_humidity_2m {current_relative_humidity_2m.Value()}")
+print(f"Current time: {current.Time()}")
+print(f"Current temperature_2m: {current_temperature_2m}")
+print(f"Current relative_humidity_2m: {current_relative_humidity_2m}")
 ```
 
 or the same but using async/wait:
@@ -50,45 +50,48 @@ or the same but using async/wait:
 # pip install openmeteo-requests
 
 import openmeteo_requests
-from openmeteo_sdk.Variable import Variable
+
 import asyncio
 
 async def main():
-    om = openmeteo_requests.AsyncClient()
-    params = {
-        "latitude": 52.54,
-        "longitude": 13.41,
-        "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
-        "current": ["temperature_2m", "relative_humidity_2m"]
-    }
+	openmeteo = openmeteo_requests.AsyncClient()
 
-    responses = await om.weather_api("https://api.open-meteo.com/v1/forecast", params=params)
-    response = responses[0]
-    print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-    print(f"Elevation {response.Elevation()} m asl")
-    print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
-    print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+	# Make sure all required weather variables are listed here
+	# The order of variables in hourly or daily is important to assign them correctly below
+	url = "https://api.open-meteo.com/v1/forecast"
+	params = {
+		"latitude": 52.52,
+		"longitude": 13.41,
+		"hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
+		"current": ["temperature_2m", "relative_humidity_2m"],
+	}
+	responses = await openmeteo.weather_api(url, params=params)
 
-    # Current values
-    current = response.Current()
-    current_variables = list(map(lambda i: current.Variables(i), range(0, current.VariablesLength())))
-    current_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, current_variables))
-    current_relative_humidity_2m = next(filter(lambda x: x.Variable() == Variable.relative_humidity and x.Altitude() == 2, current_variables))
+	# Process first location. Add a for-loop for multiple locations or weather models
+	response = responses[0]
+	print(f"Coordinates: {response.Latitude()}°N {response.Longitude()}°E")
+	print(f"Elevation: {response.Elevation()} m asl")
+	print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
 
-    print(f"Current time {current.Time()}")
-    print(f"Current temperature_2m {current_temperature_2m.Value()}")
-    print(f"Current relative_humidity_2m {current_relative_humidity_2m.Value()}")
+	# Process current data. The order of variables needs to be the same as requested.
+	current = response.Current()
+	current_temperature_2m = current.Variables(0).Value()
+	current_relative_humidity_2m = current.Variables(1).Value()
+
+	print(f"Current time: {current.Time()}")
+	print(f"Current temperature_2m: {current_temperature_2m}")
+	print(f"Current relative_humidity_2m: {current_relative_humidity_2m}")
 
 asyncio.run(main())
 ```
 
-Note 1: You can also supply a list of latitude and longitude coordinates to get data for multiple locations. The API will return a array of results, hence in this example, we only consider the first location with `response = responses[0]`.
+Note 1: To retrieve data for multiple locations, you can provide a list of latitude and longitude coordinates. The API will return an array of results, one for each location. In the examples, we only demonstrate processing data from the first location `response = responses[0]` for brevity. See [multiple locations & models](#multiple-locations--models) for more information.
 
-Note 2: Please note the function calls `()` for each attribute like `Latitude()`. Those function calls are necessary due to the FlatBuffers format to dynamically get data from an attribute without expensive parsing.
+Note 2: Due to the FlatBuffers data format, accessing each attribute, like `Latitude`, requires a function call (e.g., `Latitude()`). This approach allows for efficient data access without the need for expensive parsing.
 
 ### NumPy
 
-If you are using `NumPy` you can easily get hourly or daily data as `NumPy` array of type float.
+When using `NumPy`, hourly or daily data is readily available as a `NumPy` array of floats.
 
 ```python
 import numpy as np
@@ -160,11 +163,11 @@ print(hourly_dataframe_pl)
 
 ### Caching Data
 
-If you are working with large amounts of data, caching data can make it easier to develop. You can pass a cached session from the library `requests-cache` to the Open-Meteo API client.
+For improved development speed and efficiency when working with large datasets, consider using caching. You can integrate the `requests-cache` library by passing a cached session to the Open-Meteo API client.
 
-The following example stores all data indefinitely (`expire_after=-1`) in a SQLite database called `.cache.sqlite`. For more options read the [requests-cache documentation](https://pypi.org/project/requests-cache/).
+A recommended configuration is to cache data for one hour (`expire_after=3600`), though indefinite caching (`expire_after=-1`) is also supported. Cached data is stored in a local SQLite database named `.cache.sqlite`. For more detailed configuration options, please refer to the [requests-cache documentation](https://pypi.org/project/requests-cache/).
 
-Additionally, `retry-requests` to automatically retry failed API calls in case there has been any unexpected network or server error.
+To further enhance reliability, especially when dealing with network instability, the `retry-requests` library automatically retries failed API calls due to unexpected network or server errors.
 
 ```python
 # pip install openmeteo-requests
@@ -175,16 +178,41 @@ import requests_cache
 from retry_requests import retry
 
 # Setup the Open-Meteo API client with a cache and retry mechanism
-cache_session = requests_cache.CachedSession('.cache', expire_after=-1)
+cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
 retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
-om = openmeteo_requests.Client(session=retry_session)
+openmeteo = openmeteo_requests.Client(session=retry_session)
 
-# Using the client object `om` will now cache all weather data
+# Using the client object `openmeteo` will now cache all weather data
+```
+
+### Multiple Locations / Models
+
+If you are requesting data for multiple locations or models, you’ll receive an array of results. To access all of the data, replace `response = responses[0]` with a loop that iterates through the responses array, allowing you to process each location or model’s data.
+
+```python
+...
+
+params = {
+	"latitude": [52.52, 50.1155],
+	"longitude": [13.41, 8.6842],
+	"hourly": "temperature_2m",
+	"models": ["icon_global", "icon_eu"],
+}
+
+...
+
+# Process 2 locations and 2 models
+for response in responses:
+	print(f"\nCoordinates: {response.Latitude()}°N {response.Longitude()}°E")
+	print(f"Elevation: {response.Elevation()} m asl")
+	print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
+	print(f"Model Nº: {response.Model()}")
+
+	...
 ```
 
 ## TODO
 
-- Document multi location/timeinterval usage
 - Document FlatBuffers data structure
 - Document time start/end/interval
 - Document timezones behavior
