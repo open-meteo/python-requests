@@ -1,6 +1,6 @@
 # Open-Meteo API Python Client
 
-This API client provides access to weather data from [Open-Meteo Weather API](https://open-meteo.com) compatible with the `requests` library.
+This API client provides access to weather data from [Open-Meteo Weather API](https://open-meteo.com) based on the Python library `niquests` and compatible with the `requests` library.
 
 A key feature is its use of FlatBuffers instead of JSON for data transfer. FlatBuffers are particularly efficient when dealing with large volumes of time-series data. The library supports [Zero-Copy](https://en.wikipedia.org/wiki/Zero-copy) data transfer, allowing you to seamlessly analyze data directly within `numpy`, `pandas`, or `polars` without performance overhead. Schema definitions are available on [GitHub open-meteo/sdk](https://github.com/open-meteo/sdk).
 
