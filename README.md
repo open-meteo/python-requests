@@ -95,14 +95,30 @@ When using `NumPy`, hourly or daily data is readily available as a `NumPy` array
 
 ```python
 import numpy as np
+from openmeteo_sdk.Variable import Variable
 
 hourly = response.Hourly()
 hourly_time = range(hourly.Time(), hourly.TimeEnd(), hourly.Interval())
 hourly_variables = list(map(lambda i: hourly.Variables(i), range(0, hourly.VariablesLength())))
 
-hourly_temperature_2m = next(filter(lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2, hourly_variables)).ValuesAsNumpy()
-hourly_precipitation = next(filter(lambda x: x.Variable() == Variable.precipitation, hourly_variables)).ValuesAsNumpy()
-hourly_wind_speed_10m = next(filter(lambda x: x.Variable() == Variable.wind_speed and x.Altitude() == 10, hourly_variables)).ValuesAsNumpy()
+hourly_temperature_2m = next(
+    filter(
+        lambda x: x.Variable() == Variable.temperature and x.Altitude() == 2,
+        hourly_variables
+    )
+).ValuesAsNumpy()
+hourly_precipitation = next(
+    filter(
+        lambda x: x.Variable() == Variable.precipitation,
+        hourly_variables
+    )
+).ValuesAsNumpy()
+hourly_wind_speed_10m = next(
+    filter(
+        lambda x: x.Variable() == Variable.wind_speed and x.Altitude() == 10,
+        hourly_variables
+    )
+).ValuesAsNumpy()
 ```
 
 ### Pandas
