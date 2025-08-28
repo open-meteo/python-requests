@@ -33,9 +33,12 @@ def _process_response(
     total = len(data)
     pos, step = 0, 4
     while pos < total:
+        length = int.from_bytes(data[pos : pos + step], byteorder="little")
+        # In stream error messages start with "Unexpected"
+        if length == 0x78656E55:
+            raise OpenMeteoRequestsError(data[pos : total].decode("utf-8"))
         message = handler.GetRootAs(data, pos + step)
         messages.append(message)
-        length = int.from_bytes(data[pos : pos + step], byteorder="little")
         pos += length + step
     return messages
 
