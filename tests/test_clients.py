@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from niquests import AsyncSession, Session
+from niquests import AsyncSession, Response, Session
 from openmeteo_sdk.Variable import Variable
 
 from openmeteo_requests import AsyncClient, Client, OpenMeteoRequestsError
+from openmeteo_requests.Client import _process_response
 
 
 def _process_fetchall_basic_responses(responses: list) -> None:
@@ -98,6 +99,16 @@ class TestClient:
         client.weather_api(url=url, params=params)
         # with pytest.raises(OpenMeteoRequestsError):
         _process_fetchall_basic_responses(client.weather_api(url=url, params=params))
+
+    def test_error_stream(
+        self,
+    ) -> None:
+        response = Response()
+        # ruff: noqa: SLF001
+        response._content = b"Unexpected error while streaming data: timeoutReached"
+        with pytest.raises(OpenMeteoRequestsError) as error:
+            _process_response(response)
+        assert str(error.value) == "Unexpected error while streaming data: timeoutReached"
 
 
 @pytest.mark.asyncio
