@@ -25,6 +25,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# ignore node_modules so that semantic-release will not include them in sdist
 node_modules/
 
 # PyInstaller
