@@ -45,7 +45,7 @@ jobs:
           ignore-nothing-to-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
         with:
           just-version: 1.40.0
 
