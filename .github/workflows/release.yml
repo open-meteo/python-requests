@@ -65,7 +65,7 @@ jobs:
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: release
       url: https://pypi.org/project/openmeteo-requests/
     permissions:
       id-token: write
