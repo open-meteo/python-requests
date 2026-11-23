@@ -41,9 +41,9 @@
         ],
         "@semantic-release/git",
         [
-            "@semantic-release/exec",
+            "semantic-release-pypi",
             {
-                "prepareCmd": "uv version --frozen <%= nextRelease.version %> && uv build --no-sources && echo 'distributions-built=true' >> \"$GITHUB_OUTPUT\""
+                "pypiPublish": false
             }
         ],
         "@semantic-release/github"
