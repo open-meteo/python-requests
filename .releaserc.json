@@ -40,12 +40,7 @@
             }
         ],
         "@semantic-release/git",
-        [
-            "semantic-release-pypi",
-            {
-                "pypiPublish": false
-            }
-        ],
-        "@semantic-release/github"
+        "@semantic-release/github",
+        ["semantic-release-pypi", { "pypiPublish": false }]
     ]
 }

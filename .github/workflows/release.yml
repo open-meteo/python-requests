@@ -4,13 +4,14 @@
 
 name: Release
 
+#on:
+#  push:
+#    branches:
+#      - main
+
 # Only run releases manually
 on:
   workflow_dispatch:
-
-concurrency:
-  group: release
-  cancel-in-progress: false
 
 jobs:
   release:
@@ -35,10 +36,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: 3.11
       - name: Install semantic-release
         run: |
-          npm install --no-save semantic-release @semantic-release/git semantic-release-pypi conventional-changelog-conventionalcommits
+          npm install --no-save semantic-release @semantic-release/git conventional-changelog-conventionalcommits semantic-release-pypi
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
