@@ -4,14 +4,13 @@
 
 name: Release
 
-#on:
-#  push:
-#    branches:
-#      - main
-
 # Only run releases manually
 on:
   workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -22,7 +21,8 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      id-token: write
+    outputs:
+      artifact-id: ${{ steps.distributions.outputs.artifact-id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -31,16 +31,48 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: 3.11
+          python-version: "3.11"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
       - name: Install semantic-release
         run: |
-          npm install --no-save semantic-release @semantic-release/git conventional-changelog-conventionalcommits semantic-release-pypi
+          npm install --no-save semantic-release @semantic-release/git @semantic-release/exec conventional-changelog-conventionalcommits
       - name: Release
+        id: semantic-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_PASSWORD }}
+          UV_PYTHON: "3.11"
         run: npx semantic-release
+      - name: Upload distributions
+        id: distributions
+        if: steps.semantic-release.outputs.distributions-built == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: release
+    if: needs.release.outputs.artifact-id != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/openmeteo-requests/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ needs.release.outputs.artifact-id }}
+          path: dist/
+      - name: Publish distributions with attestations
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          attestations: true
