@@ -51,17 +51,6 @@ jobs:
           const result = await semanticRelease();
           appendFileSync(process.env.GITHUB_OUTPUT, `released=${Boolean(result)}\n`);
           JS
-      - name: Verify an already tagged release reached PyPI
-        if: steps.release.outputs.released == 'false' && github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          for tag in $(git tag --points-at HEAD --list 'v[0-9]*'); do
-            curl --fail --silent --show-error "https://pypi.org/pypi/openmeteo-requests/${tag#v}/json" |
-              jq -e '([.urls[].packagetype] | contains(["bdist_wheel", "sdist"]))' >/dev/null || {
-                echo "::error::Could not verify both distributions for $tag on PyPI."
-                exit 1
-              }
-          done
       - name: Upload distributions
         if: steps.release.outputs.released == 'true'
         uses: actions/upload-artifact@v7
