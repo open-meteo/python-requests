@@ -33,13 +33,26 @@ def _process_response(
     total = len(data)
     pos, step = 0, 4
     while pos < total:
+        if total - pos < step:
+            msg = f"Truncated FlatBuffers length prefix at byte {pos}"
+            raise OpenMeteoRequestsError(msg)
         length = int.from_bytes(data[pos : pos + step], byteorder="little")
         # In stream error messages start with "Unexpected"
         if length == 0x78656E55:
             raise OpenMeteoRequestsError(data[pos:total].decode("utf-8"))
+        if length < step:
+            msg = f"Invalid FlatBuffers message length {length} at byte {pos}"
+            raise OpenMeteoRequestsError(msg)
+        end = pos + step + length
+        if end > total:
+            msg = (
+                f"Truncated FlatBuffers message at byte {pos}: "
+                f"expected {length} bytes, got {total - pos - step}"
+            )
+            raise OpenMeteoRequestsError(msg)
         message = handler.GetRootAs(data, pos + step)
         messages.append(message)
-        pos += length + step
+        pos = end
     return messages
 
 
